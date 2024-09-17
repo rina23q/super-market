@@ -4,6 +4,33 @@ Hackathon 2024 September
 ## Notes
 
 
+Getting the list of *official* plugins:
+
+```
+$ curl --silent https://raw.githubusercontent.com/thin-edge/tedge-docs/main/src/data/plugins.tsx | grep 'sourceUrl: ' | tr -d "'," | cut -d / -f 4-
+thin-edge/rpi-pico-client
+thin-edge/python-tedge-agent
+thin-edge/tedge-config2mqtt-watcher
+thin-edge/tedge-services
+thin-edge/tedge-services
+thin-edge/tedge-services
+thin-edge/tedge-services
+thin-edge/tedge-services
+thin-edge/tedge-services
+thin-edge/c8y-command-plugin
+thin-edge/c8y-textconfig-plugin
+thin-edge/tedge-rugpi-image
+thin-edge/meta-tedge-project
+thin-edge/meta-tedge
+thin-edge/meta-tedge-bin
+thin-edge/modbus-plugin
+thin-edge/c8y-tedge
+thin-edge/tedge-benchmark
+thin-edge/tedge-management-ui
+thin-edge/tedge-demo-container
+```
+
+
 Getting latest version and packages for a plugin.
 
 
