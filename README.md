@@ -25,4 +25,22 @@ $ gh api "/repos/$PLUGIN_REPO/releases/latest" | jq '{name, url: .assets[].brows
 }
 ```
 
+## GitHub API
 
+Get reepository's `name` and `description`.
+
+Given that `gh` is already authenticated,
+
+```sh
+gh api /repos/thin-edge/<repo-name>
+```
+
+If not authenticated, or want to use `curl` instead, refer to https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#get-a-repository.
+
+Get the latest release of the reposotory, `name` (usually version), and `assets.browser_download_url`.
+
+```sh
+gh api /repos/thin-edge/<repo-name>/releases/latest
+```
+
+Refer to https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28.
