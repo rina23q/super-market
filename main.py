@@ -13,7 +13,6 @@ C8Y_TENANT = 't34761664'
 C8Y_USER = 'admin'
 C8Y_PASSWORD = os.environ.get('C8Y_PASSWORD')
 
-PLUGIN_REPO=''
 
 C8Y_AUTH = HTTPBasicAuth(C8Y_TENANT + '/' + C8Y_USER, C8Y_PASSWORD)
 C8Y_HEADERS = {
@@ -25,7 +24,8 @@ GITHUB_URL_RELEASE = 'https://api.github.com/repos/PLUGIN_REPO'
 GITHUB_URL_PLUGINS = 'https://raw.githubusercontent.com/thin-edge/tedge-docs/main/src/data/plugins.tsx'
 GITHUB_HEADERS = {
     'Accept': 'application/vnd.github+json',
-    'X-GitHub-Api-Version': '2022-11-28'
+    'X-GitHub-Api-Version': '2022-11-28',
+    'Authorization': os.environ.get('TOKEN')
 }
 
 
@@ -115,38 +115,22 @@ def create_software_version(url, version, software_id):
         "c8y_Global": {}
     }
 
-    ## create managed Object
+    child_headers = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/vnd.com.nsn.cumulocity.managedobject+json'
+        # 'X-Cumulocity-Processing-Mode': 'TRANSIENT'
+    }
     response = client.post(
-        C8Y_BASEURL + f'/inventory/managedObjects',
+        C8Y_BASEURL + f'/inventory/managedObjects/{software_id}/childAdditions',
         auth=C8Y_AUTH,
-        headers=C8Y_HEADERS,
+        headers=child_headers,
         json=payload
     )
     if response.status_code == 201:
         logging.info('Software version created')
-        child_id = response.json()['id']
-        child_paylod = {
-            "managedObject": {
-                "id": child_id
-            }
-        }
-
-        child_headers = C8Y_HEADERS
-        child_headers['Content-Type'] = 'application/vnd.com.nsn.cumulocity.managedobjectreference+json'
-
-        ## assign the MO as a child addition
-        response = client.post(
-            C8Y_BASEURL + f'/inventory/managedObjects/{software_id}/childAdditions',
-            auth=C8Y_AUTH,
-            headers=C8Y_HEADERS,
-            json=child_paylod
-        )
-        if response.status_code == 201:
-            logging.info('Software version assigned')
-        else:
-            logging.error('Software version failed to be assigned')
     else:
         logging.error('Software version failed to be created')
+
 
 
 
