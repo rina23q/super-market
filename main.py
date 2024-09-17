@@ -53,13 +53,31 @@ def get_github_info(plugin_name):
             name = plugin_info['name']
         except:
             plugin_description = 'No description'
-        create_software(name, plugin_description)
+        software_id = create_software(name, plugin_description)
+        return software_id
     else:
         logging.warning('Software not found')
 
 
-def get_github_version(plugin_name):
-    logging.info()
+def get_github_version(plugin_name, software_id):
+    logging.info('Starting to get plugin version info')
+    response = client.get(
+        GITHUB_URL_RELEASE.replace('PLUGIN_REPO', plugin_name) + '/releases/latest',
+        headers=GITHUB_HEADERS
+    )
+    if response.status_code == 200:
+        logging.info('Got the latest release')
+        raw_version = response.json()
+        for item in raw_version['assets']:
+            release_url = item['browser_download_url']
+            release_type = release_url.split('.')[-1]
+            release_version = item['name']
+            if release_type == 'deb':
+                release_type = 'apt'
+            create_software_version(release_url, release_version + '::' + release_type, software_id)
+    else:
+        logging.warning('Release not found')
+
 
 def create_software(name, description):
     logging.info('Start to create new software')
@@ -69,7 +87,8 @@ def create_software(name, description):
         "description": description,
         "c8y_Filter": {
             "type": "thin-edge.io"
-        }
+        },
+        "c8y_Global": {}
     }
 
     response = client.post(
@@ -80,16 +99,59 @@ def create_software(name, description):
     )
     if response.status_code == 201:
         logging.info('Software created')
+        return response.json()['id']
     else:
         logging.error('Software failed to be created')
 
 
-def create_software_version():
-    pass
+def create_software_version(url, version, software_id):
+    logging.info('Start to create new software')
+    payload = {
+        "type": "c8y_SoftwareBinary",
+        "c8y_Software": {
+            "url": url,
+            "version": version
+        },
+        "c8y_Global": {}
+    }
+
+    ## create managed Object
+    response = client.post(
+        C8Y_BASEURL + f'/inventory/managedObjects',
+        auth=C8Y_AUTH,
+        headers=C8Y_HEADERS,
+        json=payload
+    )
+    if response.status_code == 201:
+        logging.info('Software version created')
+        child_id = response.json()['id']
+        child_paylod = {
+            "managedObject": {
+                "id": child_id
+            }
+        }
+
+        child_headers = C8Y_HEADERS
+        child_headers['Content-Type'] = 'application/vnd.com.nsn.cumulocity.managedobjectreference+json'
+
+        ## assign the MO as a child addition
+        response = client.post(
+            C8Y_BASEURL + f'/inventory/managedObjects/{software_id}/childAdditions',
+            auth=C8Y_AUTH,
+            headers=C8Y_HEADERS,
+            json=child_paylod
+        )
+        if response.status_code == 201:
+            logging.info('Software version assigned')
+        else:
+            logging.error('Software version failed to be assigned')
+    else:
+        logging.error('Software version failed to be created')
+
 
 
 if __name__ == '__main__':
     plugin_list = get_plugin_list()
     for plugin in plugin_list:
-        get_github_info(plugin.strip())
-
+        software_id = get_github_info(plugin.strip())
+        get_github_version(plugin.strip(), software_id)
