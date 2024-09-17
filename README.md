@@ -30,6 +30,17 @@ thin-edge/tedge-management-ui
 thin-edge/tedge-demo-container
 ```
 
+Getting plugin description:
+
+```
+$ PLUGIN_REPO=thin-edge/modbus-plugin
+
+$ gh api repos/$PLUGIN_REPO | jq '{name,description}'  
+{
+  "name": "modbus-plugin",
+  "description": "Community developed modbus plugin for thin-edge.io"
+}
+```
 
 Getting latest version and packages for a plugin.
 
